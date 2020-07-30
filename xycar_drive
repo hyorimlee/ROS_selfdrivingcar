@@ -1,0 +1,31 @@
+import rospy, math
+from std_msgs.msg import Int32MultiArray
+chk = -1
+def callback(msg):
+    global chk
+    print(msg.data)
+    if msg.data[2]<msg.data[0]:#right<left
+        chk = -1
+    elif msg.data[2]>msg.data[0]:
+        chk = 1
+    else:
+        chk = 0
+
+rospy.init_node('guide')
+motor_pub = rospy.Publisher('xycar_motor_msg', Int32MultiArray, queue_size=1)
+ultra_sub = rospy.Subscriber('ultrasonic', Int32MultiArray, callback)
+
+xycar_msg = Int32MultiArray()
+
+
+while not rospy.is_shutdown():
+    global chk
+    if chk == -1:
+        angle = -30
+    elif chk == 1:
+        angle = 130
+    else:
+        angle = 0
+    speed = 100
+    xycar_msg.data = [angle,speed]
+    motor_pub.publish(xycar_msg)
