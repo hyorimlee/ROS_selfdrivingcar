@@ -41,8 +41,6 @@ def pub_motor(Angle, Speed) :
 
 def init() : 
     global cap, width, height, fig, ax, lineSetted, maxLine
-    #print("isFIle? ")
-    #print(os.path.isfile("./track-s.mkv"))
     cap = cv2.VideoCapture('/home/hyorim/catkin_ws/src/xycar_simul/src/track-s.mkv')
     ret, frame = cap.read() 
     if not ret : 
@@ -51,10 +49,6 @@ def init() :
     maxLine = width // 2 
     plt.ion()
 
-def canny(image) : 
-    blur = cv2.GaussianBlur(image, (5, 5), 0)
-    canny = cv2.Canny(blur, 50, 150)
-    return canny
 def sobel(image) :
     blur = cv2.GaussianBlur(image, (5,5),0)
     sobel = cv2.Sobel(blur,cv2.CV_8U,1,0,3)
@@ -67,46 +61,30 @@ def region_of_interest(image):
     masked_image = cv2.bitwise_and(image, mask)
     return masked_image
 
-def perspection(image):
-    pts1 = np.float32([[width//5, height//2], [width//5 * 4, height//2], [0, height], [width, height]])
-    pts2 = np.float32([[0, 0], [width, 0], [0, height], [width, height]])
-    M = cv2.getPerspectiveTransform(pts1, pts2)
-    perspection_image = cv2.warpPerspective(image, M, (width, height))
-    return perspection_image
-
 def get_histogram(image):
-    cuttedImage = image[height//5:, :]
+    cuttedImage = image[height//10:, :]
     ret, image_bin = cv2.threshold(cuttedImage, 125, 255, cv2.THRESH_BINARY)
     hist = np.sum(image_bin, axis = 0)
     return hist
 
-def imageShow(img1, img2, img3, img4) : 
-    ax[0, 0].imshow(img1, cmap='gray', vmin = 0, vmax = 255)
-    ax[0, 1].imshow(img2, cmap='gray', vmin = 0, vmax = 255)
-    ax[1, 0].imshow(img3, cmap='gray', vmin = 0, vmax = 255)
-    ax[1, 1].plot(img4, color = 'b')
-    plt.pause(0.00001)
-    ax[1, 1].lines.pop(0)
-    plt.show(False)
-    plt.draw()
 def getLine_h(histogram) :
 	global lineSetted, lines
-	start = []
-	end = []
-	thres = 100
+	thres = 1500
+	s = False
 	prev = histogram[0]
 	for i in range(1,len(histogram)) :
 		now = histogram[i]
 		if prev < thres and now > thres :
-			start.append(i)
+			start = i
 		if prev > thres and now < thres :
-			end.append(i)
+			end = i
+			lineSetted = True
+			s = True
+			break
 		prev = now
-	if len(start) != lend(end) :
-		return
-	if lineSetted == False and len(start) == 3 :
-		lineSetted = True
-
+	if s == True:
+		lines[1].update(start,end)
+	return
 
 
 
@@ -185,7 +163,7 @@ def getLine(histogram) :
 
 def draw3Lines(frame) : 
     global lines, lineSetted 
-    if lineSetted : 
+    if lineSetted :
         cv2.line(frame, (lines[0].getMiddle(), height), (lines[0].getMiddle(), height - 20), (255, 0, 0), 10)
         cv2.line(frame, (lines[1].getMiddle(), height), (lines[1].getMiddle(), height - 20), (0, 255, 0), 10)
         cv2.line(frame, (lines[2].getMiddle(), height), (lines[2].getMiddle(), height - 20), (0, 0, 255), 10)
@@ -207,31 +185,28 @@ if __name__ == '__main__' :
         if ret:
             grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             sobeled_image = sobel(grayframe)
-            #cv2.imshow("gray", grayframe)
-            #cannyed_image = canny(grayframe)
             cropped_image = region_of_interest(sobeled_image)
-            #cropped_image = region_of_interest(cannyed_image)
-            #topview_image = perspection(cropped_image)
             hist = get_histogram(cropped_image)
-            #hist = get_histogram(topview_image)
-            getLine(hist)
-            if lineSetted : 
+            lines[0].update(0,0)
+            lines[2].update(width,width)
+            getLine_h(hist)
+            if lineSetted :
                 midLine = (lines[1].start + lines[1].end )//2
                 diffLine = midLine - maxLine
                 if(diffLine < -80) : 
-                    angle = -70 
+                    angle = -70
                 if(diffLine > 80) : 
                     angle  = 70  
                 pub_motor(angle, speed)
+                print(midLine)
                 rate.sleep()
+			
             draw3Lines(frame) 
             cv2.imshow("gray", frame) 
-            #imageShow(sobeled_image, cropped_image,grayframe, hist)
             k = cv2.waitKey(1)
             if k == 27 : 
                 break
         else : 
             break
-    #plt.show() 
     cap.release() 
     cv2.destroyAllWindows()
