@@ -166,7 +166,7 @@ if __name__ == '__main__' :
             hist = get_histogram(cropped_image)
             lines[0].update(0,0)
             lines[2].update(width,width)
-            getLine_h(hist)
+            getLine(hist)
             if lineSetted :
                 midLine = (lines[1].start + lines[1].end )//2
                 diffLine = midLine - maxLine
