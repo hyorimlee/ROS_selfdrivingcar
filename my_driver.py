@@ -101,8 +101,6 @@ def getLine(histogram) :
         if prev > thres and now < thres : 
             end.append(i)
         prev = now 
-    #print("start : ", start)
-    #print("end : " , end)
     
     if len(start) != len(end) : 
         return
@@ -160,7 +158,7 @@ def getLine(histogram) :
             lines[i].update(start[i], end[i]) 
         return 
 
-
+"""
 def draw3Lines(frame) : 
     global lines, lineSetted 
     if lineSetted :
@@ -168,7 +166,7 @@ def draw3Lines(frame) :
         cv2.line(frame, (lines[1].getMiddle(), height), (lines[1].getMiddle(), height - 20), (0, 255, 0), 10)
         cv2.line(frame, (lines[2].getMiddle(), height), (lines[2].getMiddle(), height - 20), (0, 0, 255), 10)
     return frame
-
+"""
 
 if __name__ == '__main__' :
     global pub, maxLine, maxAngle, lineSetted, lines
@@ -194,14 +192,13 @@ if __name__ == '__main__' :
                 midLine = (lines[1].start + lines[1].end )//2
                 diffLine = midLine - maxLine
                 if(diffLine < -80) : 
-                    angle = -70
+                    angle = -50
                 if(diffLine > 80) : 
-                    angle  = 70  
+                    angle  = 50  
                 pub_motor(angle, speed)
-                print(midLine)
                 rate.sleep()
 			
-            draw3Lines(frame) 
+            #draw3Lines(frame) 
             cv2.imshow("gray", frame) 
             k = cv2.waitKey(1)
             if k == 27 : 
