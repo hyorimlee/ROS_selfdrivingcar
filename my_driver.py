@@ -67,27 +67,6 @@ def get_histogram(image):
     hist = np.sum(image_bin, axis = 0)
     return hist
 
-def getLine_h(histogram) :
-	global lineSetted, lines
-	thres = 1500
-	s = False
-	prev = histogram[0]
-	for i in range(1,len(histogram)) :
-		now = histogram[i]
-		if prev < thres and now > thres :
-			start = i
-		if prev > thres and now < thres :
-			end = i
-			lineSetted = True
-			s = True
-			break
-		prev = now
-	if s == True:
-		lines[1].update(start,end)
-	return
-
-
-
 def getLine(histogram) : 
     global lineSetted, lines
     start = []
